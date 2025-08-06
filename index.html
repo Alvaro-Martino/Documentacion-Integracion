@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Documentación de API</title>
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css">
+  <style>
+    html { box-sizing: border-box; overflow: -moz-scrollbars-vertical; overflow-y: scroll; }
+    *, *:before, *:after { box-sizing: inherit; }
+    body { margin: 0; background: #fafafa; }
+  </style>
+</head>
+
+<body>
+  <div id="swagger-ui"></div>
+
+  <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js"></script>
+
+  <script>
+    window.onload = function() {
+      const ui = SwaggerUIBundle({
+        // Definición de la API como un objeto JSON nativo
+        spec: {
+          "openapi": "3.0.3",
+          "info": {
+            "title": "API de Integración de Documentos",
+            "description": "API para la gestión de documentos (subida, descarga y eliminación) por sistemas externos, autenticada mediante API Key.",
+            "version": "1.0.0"
+          },
+          "servers": [
+            {
+              "url": "https://api.iddigital.com.uy/v1/integration",
+              "description": "Servidor de Producción"
+            }
+          ],
+          "tags": [
+            {
+              "name": "Integración de Documentos",
+              "description": "Operaciones para sistemas externos"
+            }
+          ],
+          "paths": {
+            "/upload": {
+              "post": {
+                "tags": ["Integración de Documentos"],
+                "summary": "Subir documento y solicitar firmas",
+                "description": "Sube un documento en base64 y solicita firmas a una lista de destinatarios.",
+                "parameters": [
+                  {
+                    "name": "apikey",
+                    "in": "header",
+                    "required": true,
+                    "description": "API Key para autenticación",
+                    "schema": { "type": "string" }
+                  }
+                ],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": { "$ref": "#/components/schemas/IntegrationRequestDto" }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "Operación exitosa",
+                    "content": {
+                      "application/json": {
+                        "schema": { "$ref": "#/components/schemas/IntegrationResponseDto" }
+                      }
+                    }
+                  },
+                  "401": { "description": "API Key inválida o ausente" }
+                }
+              }
+            },
+            "/download": {
+              "get": {
+                "tags": ["Integración de Documentos"],
+                "summary": "Descargar un documento",
+                "description": "Descarga la versión más reciente de un documento.",
+                "parameters": [
+                  {
+                    "name": "nodeId",
+                    "in": "query",
+                    "required": true,
+                    "description": "ID del nodo del documento a descargar",
+                    "schema": { "type": "integer", "format": "int64" }
+                  },
+                  {
+                    "name": "apikey",
+                    "in": "header",
+                    "required": true,
+                    "description": "API Key para autenticación",
+                    "schema": { "type": "string" }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Operación exitosa. Devuelve el archivo PDF.",
+                    "content": { "application/pdf": {} }
+                  },
+                  "401": { "description": "API Key inválida o ausente" },
+                  "404": { "description": "Documento no encontrado" }
+                }
+              }
+            },
+            "/delete": {
+              "delete": {
+                "tags": ["Integración de Documentos"],
+                "summary": "Eliminar un documento",
+                "description": "Eliminación lógica de un documento y sus firmas asociadas.",
+                "parameters": [
+                  {
+                    "name": "fileGroupId",
+                    "in": "query",
+                    "required": true,
+                    "description": "ID del grupo de archivos a eliminar",
+                    "schema": { "type": "integer", "format": "int64" }
+                  },
+                  {
+                    "name": "apikey",
+                    "in": "header",
+                    "required": true,
+                    "description": "API Key para autenticación",
+                    "schema": { "type": "string" }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Documento eliminado exitosamente",
+                    "content": {
+                      "application/json": {
+                        "schema": { "$ref": "#/components/schemas/IntegrationResponseDto" }
+                      }
+                    }
+                  },
+                  "401": { "description": "API Key inválida o ausente" },
+                  "404": { "description": "Documento no encontrado" }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "IntegrationRequestDto": {
+                "type": "object",
+                "properties": {
+                  "from": { "type": "string", "description": "Email del remitente (opcional)", "example": "remitente@empresa.com" },
+                  "recipients": { "type": "array", "items": { "$ref": "#/components/schemas/IntegrationRecipientDto" } },
+                  "base64Document": { "type": "string", "description": "Contenido del documento en formato Base64.", "example": "JVBERi0xLjQKJ..." },
+                  "fileName": { "type": "string", "description": "Nombre del archivo sin extensión.", "example": "Contrato de Servicios" },
+                  "advancedElectronicSignature": { "type": "boolean", "description": "Indica si se requiere Firma Electrónica Avanzada.", "example": false }
+                }
+              },
+              "IntegrationRecipientDto": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "example": "destinatario1@email.com" },
+                  "name": { "type": "string", "example": "Juan" },
+                  "surname": { "type": "string", "example": "Pérez" }
+                }
+              },
+              "IntegrationResponseDto": {
+                "type": "object",
+                "properties": {
+                  "documentId": { "type": "integer", "format": "int64", "example": 12345 },
+                  "message": { "type": "string", "example": "Document uploaded and signature requests sent successfully." }
+                }
+              }
+            }
+          }
+        },
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout"
+      });
+      window.ui = ui;
+    };
+  </script>
+</body>
+</html>
