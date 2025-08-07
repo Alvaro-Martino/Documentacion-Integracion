@@ -28,12 +28,6 @@
             "description": "API para la gestión de documentos (subida, descarga y eliminación) por sistemas externos, autenticada mediante API Key.",
             "version": "1.0.0"
           },
-          "servers": [
-            {
-              "url": "https://api.iddigital.com.uy/v1/integration",
-              "description": "Servidor de Producción"
-            }
-          ],
           "tags": [
             {
               "name": "Integración de Documentos",
@@ -167,7 +161,7 @@
                 "type": "object",
                 "properties": {
                   "documentId": { "type": "integer", "format": "int64", "example": 12345 },
-                  "message": { "type": "string", "example": "Document uploaded and signature requests sent successfully." }
+                  "message": { "type": "string", "example": "Document deleted successfully." }
                 }
               }
             }
