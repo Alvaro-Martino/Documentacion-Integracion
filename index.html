@@ -25,13 +25,17 @@
           "openapi": "3.0.3",
           "info": {
             "title": "API de Integración de Documentos",
-            "description": "API para la gestión de documentos (subida, descarga y eliminación) por sistemas externos, autenticada mediante API Key.",
+            "description": "API para la gestión de documentos (subida, descarga, eliminación y notificaciones) por sistemas externos, autenticada mediante API Key.",
             "version": "1.0.0"
           },
           "tags": [
             {
               "name": "Integración de Documentos",
               "description": "Operaciones para sistemas externos"
+            },
+            {
+              "name": "Operaciones de Callback",
+              "description": "Notificaciones"
             }
           ],
           "paths": {
@@ -135,6 +139,24 @@
                   "404": { "description": "Documento no encontrado" }
                 }
               }
+            },
+            "/notify": {
+              "post": {
+                "tags": ["Operaciones de Callback"],
+                "summary": "Notificar firma de documento",
+                "description": "Notifica al sistema externo que un documento ha sido firmado.",
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": { "$ref": "#/components/schemas/IntegrationNotifyDto" }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": { "description": "Notificación recibida correctamente" }
+                }
+              }
             }
           },
           "components": {
@@ -163,6 +185,26 @@
                   "documentId": { "type": "integer", "format": "int64", "example": 12345 },
                   "message": { "type": "string", "example": "Document deleted successfully." }
                 }
+              },
+              "IntegrationNotifyDto": {
+                "type": "object",
+                "properties": {
+                  "documentId": { "type": "integer", "format": "int64" },
+                  "signedBy": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/IntegrationRecipientDto" }
+                  },
+                  "pendingSigners": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/IntegrationRecipientDto" }
+                  },
+                  "documentStatus": {
+                    "type": "string",
+                    "description": "PENDING si quedan firmantes pendientes, SIGNED si todos firmaron",
+                    "enum": ["PENDING", "SIGNED"]
+                  }
+                },
+                "required": ["documentId", "signedBy", "pendingSigners", "documentStatus"]
               }
             }
           }
